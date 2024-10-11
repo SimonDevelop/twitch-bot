@@ -91,6 +91,18 @@ class TwitchApi
         }
     }
 
+    public function getChannelInformation($channelId): array
+    {
+        $response = Http::withToken($this->getAccessToken())
+            ->acceptJson()
+            ->withHeader('Client-ID', $this->client)
+            ->get('https://api.twitch.tv/helix/channels?broadcaster_id=' . $channelId);
+
+        $result = json_decode($response->body(), true);
+
+        return $result['data'][0];
+    }
+
     public function validateSignature(Request $request): bool
     {
         $signature = $request->header('Twitch-Eventsub-Message-Signature');
