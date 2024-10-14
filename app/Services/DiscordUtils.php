@@ -36,7 +36,7 @@ class DiscordUtils
             ->title($liveInfos['title'])
             ->url($url)
             ->authorName($username)
-            ->authorIcon($userInfos['profile_image_url'])
+            ->authorIcon('')//$userInfos['profile_image_url']
             ->authorUrl($url)
             ->field('Catégorie', $liveInfos['game_name'])
             ->thumbnailUrl($userInfos['profile_image_url'])
