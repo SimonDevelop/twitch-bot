@@ -1,0 +1,8 @@
+services:
+  laracord:
+    restart: always
+    image: simondockerise/laracord
+    volumes:
+      - $PWD:/app
+    ports:
+      - 8080:8080
