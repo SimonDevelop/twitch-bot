@@ -65,10 +65,10 @@ class ChannelListCommand extends Command
         foreach ($result['data'] as $sub) {
             foreach ($channels as $channel) {
                 if ($channel->twitch_id === $sub['condition']['broadcaster_user_id']) {
-                    if ($first) {
-                        $first = false;
+                    if ($first === false) {
                         $text .= "\n\n";
                     }
+                    $first = false;
                     $text .= "Chaîne Twitch : " . $channel->twitch_name . "\n";
                     $text .= "Status : " . $sub['status'] . "\n";
                     $text .= "Ajouté le : " . (new \DateTime($sub['created_at']))->format("d/m/Y");
