@@ -2,10 +2,13 @@
 
 namespace App\Commands;
 
+use App\Models\Channel;
 use App\Services\TwitchApi;
 use Discord\Parts\Interactions\Interaction;
 use Laracord\Commands\Command;
 use Laracord\Laracord;
+use React\Promise\ExtendedPromiseInterface;
+use React\Promise\PromiseInterface;
 
 class RemoveChannelCommand extends Command
 {
@@ -28,7 +31,7 @@ class RemoveChannelCommand extends Command
      *
      * @var bool
      */
-    protected $admin = false;
+    protected $admin = true;
 
     /**
      * Determines whether the command should be displayed in the commands list.
@@ -52,16 +55,19 @@ class RemoveChannelCommand extends Command
      * @param  array  $args
      * @return void
      */
-    public function handle($message, $args)
+    public function handle($message, $args): null|ExtendedPromiseInterface|PromiseInterface
     {
         if (count($args) > 0) {
             foreach ($args as $arg) {
-                if ($this->api->removeSubscriptions($arg) === false) {
+                $infos = $this->api->getUserInformation($arg);
+                $channel = Channel::where('twitch_name', $infos['display_name'])->first();
+                if ($this->api->removeSubscriptions($channel->subscription_id) === false) {
                     return $this
                         ->message()
                         ->title("Une erreur est survenue lors de l'ajout du channel : " . $arg)
                         ->send($message);
                 }
+                $channel->delete();
             }
 
             return $this
@@ -72,15 +78,5 @@ class RemoveChannelCommand extends Command
         return $this
             ->message("Aucun id channel dans la commande.")
             ->send($message);
-    }
-
-    /**
-     * The command interaction routes.
-     */
-    public function interactions(): array
-    {
-        return [
-            'wave' => fn (Interaction $interaction) => $this->message('👋')->reply($interaction),
-        ];
     }
 }

@@ -21,8 +21,26 @@ class DiscordUtils
     {
         $infos = $this->api->getChannelInformation($userId);
         $username = $infos['broadcaster_name'];
-        $url = 'https://www.twitch.tv/' . $username;
+        $url = 'https://www.twitch.tv/' . strtolower($username);
+        $userInfos = $this->api->getUserInformation($username);
+        $liveInfos = $this->api->getStreamInformation($userInfos['user_id']);
+        $thumbnail = str_replace([
+            "{width}",
+            "{height}"
+        ], [
+            "300",
+            "169"
+        ], $liveInfos['thumbnail_url']);
 
-        $this->bot->message($username . " est en live !\n" . $url)->send($this->channelAnnouncement);
+        $this->bot->message()
+            ->title($liveInfos['title'])
+            ->url($url)
+            ->authorName($username)
+            ->authorIcon($userInfos['profile_image_url'])
+            ->authorUrl($url)
+            ->field('Catégorie', $liveInfos['game_name'])
+            ->thumbnailUrl($userInfos['profile_image_url'])
+            ->imageUrl($thumbnail)
+            ->send($this->channelAnnouncement);
     }
 }

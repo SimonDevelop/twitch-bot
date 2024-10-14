@@ -2,10 +2,13 @@
 
 namespace App\Commands;
 
+use App\Models\Channel;
 use App\Services\TwitchApi;
 use Discord\Parts\Interactions\Interaction;
 use Laracord\Commands\Command;
 use Laracord\Laracord;
+use React\Promise\ExtendedPromiseInterface;
+use React\Promise\PromiseInterface;
 
 class AddChannelCommand extends Command
 {
@@ -28,7 +31,7 @@ class AddChannelCommand extends Command
      *
      * @var bool
      */
-    protected $admin = false;
+    protected $admin = true;
 
     /**
      * Determines whether the command should be displayed in the commands list.
@@ -52,11 +55,27 @@ class AddChannelCommand extends Command
      * @param  array  $args
      * @return void
      */
-    public function handle($message, $args)
+    public function handle($message, $args): null|ExtendedPromiseInterface|PromiseInterface
     {
         if (count($args) > 0) {
             foreach ($args as $arg) {
-                if ($this->api->createSubscriptions($arg) === false) {
+                $infos = $this->api->getUserInformation($arg);
+                if (isset($infos['id'])) {
+                    $id = $infos['id'];
+                    $subscription = $this->api->createSubscriptions($id);
+                    if ($subscription === false) {
+                        return $this
+                            ->message("Une erreur est survenue lors de l'ajout du channel : " . $arg)
+                            ->send($message);
+                    }
+                    // Save informations in database
+                    Channel::create([
+                        'twitch_id' => $infos['id'],
+                        'twitch_name' => $infos['display_name'],
+                        'twitch_url' => 'https://www.twitch.tv/' . $infos['login'],
+                        'subscription_id' => $subscription['data'][0]['id']
+                    ]);
+                } else {
                     return $this
                         ->message("Une erreur est survenue lors de l'ajout du channel : " . $arg)
                         ->send($message);
@@ -71,15 +90,5 @@ class AddChannelCommand extends Command
         return $this
             ->message("Aucun id channel dans la commande.")
             ->send($message);
-    }
-
-    /**
-     * The command interaction routes.
-     */
-    public function interactions(): array
-    {
-        return [
-            'wave' => fn (Interaction $interaction) => $this->message('👋')->reply($interaction),
-        ];
     }
 }

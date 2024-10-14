@@ -42,7 +42,7 @@ class TwitchApi
         return $result;
     }
 
-    public function createSubscriptions($streamId): bool
+    public function createSubscriptions($streamId): bool|array
     {
         $response = Http::withToken($this->getAccessToken())
             ->acceptJson()
@@ -65,7 +65,7 @@ class TwitchApi
             throw new \Exception('Cannot add twitch subscriptions : \n' . $response->body());
         } else {
             if ($response->getStatusCode() === 202) {
-                return true;
+                return json_decode($response->body(), true);
             }
 
             return false;
@@ -97,6 +97,30 @@ class TwitchApi
             ->acceptJson()
             ->withHeader('Client-ID', $this->client)
             ->get('https://api.twitch.tv/helix/channels?broadcaster_id=' . $channelId);
+
+        $result = json_decode($response->body(), true);
+
+        return $result['data'][0];
+    }
+
+    public function getUserInformation($username): array
+    {
+        $response = Http::withToken($this->getAccessToken())
+            ->acceptJson()
+            ->withHeader('Client-ID', $this->client)
+            ->get('https://api.twitch.tv/helix/users?login=' . strtolower($username));
+
+        $result = json_decode($response->body(), true);
+
+        return $result['data'][0];
+    }
+
+    public function getStreamInformation($id): array
+    {
+        $response = Http::withToken($this->getAccessToken())
+            ->acceptJson()
+            ->withHeader('Client-ID', $this->client)
+            ->get('https://api.twitch.tv/helix/streams?user_id=' . $id);
 
         $result = json_decode($response->body(), true);
 
