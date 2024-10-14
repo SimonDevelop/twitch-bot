@@ -4,6 +4,8 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Config;
 use Laracord\Laracord;
+use React\Promise\ExtendedPromiseInterface;
+use React\Promise\PromiseInterface;
 
 class DiscordUtils
 {
@@ -17,32 +19,36 @@ class DiscordUtils
         $this->bot = app('bot');
     }
 
-    public function sendAnnouncement(string $userId): void
+    public function sendAnnouncement(string $userId): null|ExtendedPromiseInterface|PromiseInterface
     {
-        $infos = $this->api->getChannelInformation($userId);
-        $username = $infos['broadcaster_name'];
-        $url = 'https://www.twitch.tv/' . strtolower($username);
-        $userInfos = $this->api->getUserInformation($username);
-        $liveInfos = $this->api->getStreamInformation($userInfos['user_id']);
-        $thumbnail = str_replace([
-            "{width}",
-            "{height}"
-        ], [
-            "400",
-            "225"
-        ], $liveInfos['thumbnail_url']);
+        try {
+            $infos = $this->api->getChannelInformation($userId);
+            $username = $infos['broadcaster_name'];
+            $url = 'https://www.twitch.tv/' . strtolower($username);
+            $userInfos = $this->api->getUserInformation($username);
+            $liveInfos = $this->api->getStreamInformation($userInfos['user_id']);
+            $thumbnail = str_replace([
+                "{width}",
+                "{height}"
+            ], [
+                "400",
+                "225"
+            ], $liveInfos['thumbnail_url']);
 
-        $this->bot->message()
-            ->title($liveInfos['title'])
-            ->url($url)
-            ->authorName($username . ' est en live sur Twitch !')
-            ->authorIcon('')
-            ->authorUrl($url)
-            ->field('Catégorie', $liveInfos['game_name'])
-            ->field('Viewers', $liveInfos['viewer_count'])
-            ->thumbnailUrl($userInfos['profile_image_url'])
-            ->imageUrl($thumbnail)
-            ->button('Regarder le stream', $url)
-            ->send($this->channelAnnouncement);
+            $this->bot->message()
+                ->title($liveInfos['title'])
+                ->url($url)
+                ->authorName($username . ' est en live sur Twitch !')
+                ->authorIcon('')
+                ->authorUrl($url)
+                ->field('Catégorie', $liveInfos['game_name'])
+                ->field('Viewers', $liveInfos['viewer_count'])
+                ->thumbnailUrl($userInfos['profile_image_url'])
+                ->imageUrl($thumbnail)
+                ->button('Regarder le stream', $url)
+                ->send($this->channelAnnouncement);
+        } catch (\Exception $e) {
+            throw new \Exception("Webhook error : " . $e->getMessage());
+        }
     }
 }
