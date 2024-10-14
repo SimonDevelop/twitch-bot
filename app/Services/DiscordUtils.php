@@ -28,19 +28,21 @@ class DiscordUtils
             "{width}",
             "{height}"
         ], [
-            "300",
-            "169"
+            "400",
+            "225"
         ], $liveInfos['thumbnail_url']);
 
         $this->bot->message()
             ->title($liveInfos['title'])
             ->url($url)
-            ->authorName($username)
-            ->authorIcon('')//$userInfos['profile_image_url']
+            ->authorName($username . ' est en live sur Twitch !')
+            ->authorIcon('')
             ->authorUrl($url)
             ->field('Catégorie', $liveInfos['game_name'])
+            ->field('Viewers', $liveInfos['viewer_count'])
             ->thumbnailUrl($userInfos['profile_image_url'])
             ->imageUrl($thumbnail)
+            ->button('Regarder le stream', $url)
             ->send($this->channelAnnouncement);
     }
 }
