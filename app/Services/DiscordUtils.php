@@ -26,8 +26,7 @@ class DiscordUtils
         $change = false;
         if ($channel->state !== $event) {
             $change = true;
-            $channel->state = $event === 'stream.online' ? 'stream.offline' : 'stream.online';
-            $channel->save();
+            $channel->state = $event === 'stream.online' ? 'stream.online' : 'stream.offline';
         }
 
         if ($change && $channel->state === 'stream.online') {
@@ -56,6 +55,8 @@ class DiscordUtils
                     ->imageUrl($thumbnail)
                     ->button('Regarder le stream', $url)
                     ->send($this->channelAnnouncement);
+
+                $channel->save();
             } catch (\Exception $e) {
                 throw new \Exception($e->getMessage());
             }
