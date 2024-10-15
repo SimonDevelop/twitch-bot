@@ -26,7 +26,7 @@ class DiscordUtils
             $username = $infos['broadcaster_name'];
             $url = 'https://www.twitch.tv/' . strtolower($username);
             $userInfos = $this->api->getUserInformation($username);
-            $liveInfos = $this->api->getStreamInformation($userInfos['user_id']);
+            $liveInfos = $this->api->getStreamInformation($userInfos['id']);
             $thumbnail = str_replace([
                 "{width}",
                 "{height}"

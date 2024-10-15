@@ -127,7 +127,7 @@ class TwitchApi
         return $result['data'][0];
     }
 
-    public function validateSignature(Request $request): bool
+    public function validateSignature(Request $request): bool|\Exception
     {
         $signature = $request->header('Twitch-Eventsub-Message-Signature');
         $messageId = $request->header('Twitch-Eventsub-Message-Id');
@@ -137,6 +137,6 @@ class TwitchApi
         $message = $messageId . $timestamp . $content;
         $expectedSignature = 'sha256=' . hash_hmac('sha256', $message, $this->webhookSecret);
 
-        return hash_equals($signature, $expectedSignature);
+        return hash_equals($expectedSignature, $signature);
     }
 }
