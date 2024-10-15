@@ -32,11 +32,10 @@ class DiscordUtils
 
         if ($change && $channel->state === 'stream.online') {
             try {
-                $infos = $this->api->getChannelInformation($userId);
-                $username = $infos['broadcaster_name'];
+                $username = $channel->twitch_name;
                 $url = 'https://www.twitch.tv/' . strtolower($username);
                 $userInfos = $this->api->getUserInformation($username);
-                $liveInfos = $this->api->getStreamInformation($userInfos['id']);
+                $liveInfos = $this->api->getStreamInformation($userId);
                 $thumbnail = str_replace([
                     "{width}",
                     "{height}"
