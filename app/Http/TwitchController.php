@@ -13,18 +13,20 @@ class TwitchController extends Controller
     public function index(Request $request, TwitchApi $api, DiscordUtils $discordUtils): Response
     {
         if (!$api->validateSignature($request)) {
-            throw new \Exception("Invalid webhook signature");
+            throw new \Exception("Signature du webhook incorrect");
         }
 
         $ifVerification = $request->headers->get('Twitch-Eventsub-Message-Type') === 'webhook_callback_verification';
-        $content = json_decode($request->getContent(), true);
-
+        $body = json_decode($request->getContent(), true);
         if ($ifVerification) {
-            return new Response($content['challenge']);
+            return new Response($body['challenge']);
         }
 
-        if ($content['subscription']['type'] === 'stream.online') {
-            $discordUtils->sendAnnouncement($content['subscription']['condition']['broadcaster_user_id']);
+        if (
+            ($body['subscription']['type'] === 'stream.online' || $body['subscription']['type'] === 'stream.offline')
+            && isset($body['subscription']['condition']['broadcaster_user_id'])
+        ) {
+            $discordUtils->sendAnnouncement($body['subscription']['condition']['broadcaster_user_id'], $body['subscription']['type']);
 
             return new Response('', 204);
         }

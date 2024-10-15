@@ -42,14 +42,14 @@ class TwitchApi
         return $result;
     }
 
-    public function createSubscriptions($streamId): bool|array
+    public function createSubscriptions(string $streamId, string $event): bool|array
     {
         $response = Http::withToken($this->getAccessToken())
             ->acceptJson()
             ->contentType('application/json')
             ->withHeader('Client-ID', $this->client)
             ->post('https://api.twitch.tv/helix/eventsub/subscriptions', [
-                'type' => 'stream.online',
+                'type' => $event,
                 'version' => '1',
                 'condition' => [
                     'broadcaster_user_id' => $streamId
@@ -63,16 +63,16 @@ class TwitchApi
 
         if ($response->getStatusCode() > 300) {
             throw new \Exception('Cannot add twitch subscriptions : \n' . $response->body());
-        } else {
-            if ($response->getStatusCode() === 202) {
-                return json_decode($response->body(), true);
-            }
-
-            return false;
         }
+
+        if ($response->getStatusCode() === 202) {
+            return json_decode($response->body(), true);
+        }
+
+        return false;
     }
 
-    public function removeSubscriptions($streamId): bool
+    public function removeSubscription(string $streamId): bool
     {
         $response = Http::withToken($this->getAccessToken())
             ->acceptJson()
@@ -81,17 +81,13 @@ class TwitchApi
             ->delete('https://api.twitch.tv/helix/eventsub/subscriptions?id=' . $streamId);
 
         if ($response->getStatusCode() > 300) {
-            throw new \Exception('Cannot remove twitch subscription, code: ' . $response->getStatusCode());
-        } else {
-            if ($response->getStatusCode() === 204) {
-                return true;
-            }
-
             return false;
         }
+
+        return true;
     }
 
-    public function getChannelInformation($channelId): array
+    public function getChannelInformation(string $channelId): array
     {
         $response = Http::withToken($this->getAccessToken())
             ->acceptJson()
@@ -103,7 +99,7 @@ class TwitchApi
         return $result['data'][0];
     }
 
-    public function getUserInformation($username): array
+    public function getUserInformation(string $username): array
     {
         $response = Http::withToken($this->getAccessToken())
             ->acceptJson()
@@ -115,7 +111,7 @@ class TwitchApi
         return $result['data'][0];
     }
 
-    public function getStreamInformation($id): array
+    public function getStreamInformation(string $id): array
     {
         $response = Http::withToken($this->getAccessToken())
             ->acceptJson()
@@ -127,7 +123,7 @@ class TwitchApi
         return $result['data'][0];
     }
 
-    public function validateSignature(Request $request): bool
+    public function validateSignature(Request $request): bool|\Exception
     {
         $signature = $request->header('Twitch-Eventsub-Message-Signature');
         $messageId = $request->header('Twitch-Eventsub-Message-Id');
@@ -137,6 +133,6 @@ class TwitchApi
         $message = $messageId . $timestamp . $content;
         $expectedSignature = 'sha256=' . hash_hmac('sha256', $message, $this->webhookSecret);
 
-        return hash_equals($signature, $expectedSignature);
+        return hash_equals($expectedSignature, $signature);
     }
 }

@@ -18,6 +18,8 @@ class Channel extends Model
         'twitch_id',
         'twitch_name',
         'twitch_url',
-        'subscription_id'
+        'subscription_online_id',
+        'subscription_offline_id',
+        'state'
     ];
 }

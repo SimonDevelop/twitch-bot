@@ -60,14 +60,17 @@ class RemoveChannelCommand extends Command
         if (count($args) > 0) {
             foreach ($args as $arg) {
                 $infos = $this->api->getUserInformation($arg);
-                $channel = Channel::where('twitch_name', $infos['display_name'])->first();
-                if ($this->api->removeSubscriptions($channel->subscription_id) === false) {
+                $subscription = Channel::where('twitch_name', $infos['display_name'])->first();
+                if (
+                    $this->api->removeSubscription($subscription->subscription_online_id) === false
+                    && $this->api->removeSubscription($subscription->subscription_offline_id) === false
+                ) {
                     return $this
                         ->message()
                         ->title("Une erreur est survenue lors de l'ajout du channel : " . $arg)
                         ->send($message);
                 }
-                $channel->delete();
+                $subscription->delete();
             }
 
             return $this
