@@ -22,8 +22,11 @@ class TwitchController extends Controller
             return new Response($body['challenge']);
         }
 
-        if ($body['subscription']['type'] === 'stream.online' && isset($body['subscription']['condition']['broadcaster_user_id'])) {
-            $discordUtils->sendAnnouncement($body['subscription']['condition']['broadcaster_user_id']);
+        if (
+            ($body['subscription']['type'] === 'stream.online' || $body['subscription']['type'] === 'stream.offline')
+            && isset($body['subscription']['condition']['broadcaster_user_id'])
+        ) {
+            $discordUtils->sendAnnouncement($body['subscription']['condition']['broadcaster_user_id'], $body['subscription']['type']);
 
             return new Response('', 204);
         }

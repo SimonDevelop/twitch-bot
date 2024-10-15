@@ -62,19 +62,29 @@ class AddChannelCommand extends Command
                 $infos = $this->api->getUserInformation($arg);
                 if (isset($infos['id'])) {
                     $id = $infos['id'];
-                    $subscription = $this->api->createSubscriptions($id);
-                    if ($subscription === false) {
-                        return $this
-                            ->message("Une erreur est survenue lors de l'ajout du channel : " . $arg)
-                            ->send($message);
+                    $events = ['stream.online', 'stream.offline'];
+                    foreach ($events as $event) {
+                        $subscription = $this->api->createSubscriptions($id, $event);
+                        if ($subscription === false) {
+                            return $this
+                                ->message("Une erreur est survenue lors de l'ajout du channel : " . $arg)
+                                ->send($message);
+                        }
+                        $sub = Channel::where('twitch_id', $infos['id'])->first();
+                        if (is_null($sub)) {
+                            Channel::create([
+                                'twitch_id' => $infos['id'],
+                                'twitch_name' => $infos['display_name'],
+                                'twitch_url' => 'https://www.twitch.tv/' . $infos['login'],
+                                'subscription_online_id' => $subscription['data'][0]['id'],
+                                'subscription_offline_id' => null,
+                                'state' => 'stream.offline'
+                            ]);
+                        } else {
+                            $sub->subscription_offline_id = $subscription['data'][0]['id'];
+                            $sub->save();
+                        }
                     }
-                    // Save informations in database
-                    Channel::create([
-                        'twitch_id' => $infos['id'],
-                        'twitch_name' => $infos['display_name'],
-                        'twitch_url' => 'https://www.twitch.tv/' . $infos['login'],
-                        'subscription_id' => $subscription['data'][0]['id']
-                    ]);
                 } else {
                     return $this
                         ->message("Une erreur est survenue lors de l'ajout du channel : " . $arg)

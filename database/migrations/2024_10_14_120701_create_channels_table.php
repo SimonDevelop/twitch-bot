@@ -15,7 +15,9 @@ return new class extends Migration {
             $table->string('twitch_id');
             $table->string('twitch_name');
             $table->string('twitch_url');
-            $table->string('subscription_id');
+            $table->string('subscription_online_id')->nullable();
+            $table->string('subscription_offline_id')->nullable();
+            $table->string('state');
             $table->timestamps();
         });
     }

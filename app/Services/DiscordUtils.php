@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Channel;
 use Illuminate\Support\Facades\Config;
 use Laracord\Laracord;
 use React\Promise\ExtendedPromiseInterface;
@@ -19,36 +20,46 @@ class DiscordUtils
         $this->bot = app('bot');
     }
 
-    public function sendAnnouncement(string $userId): null|ExtendedPromiseInterface|PromiseInterface
+    public function sendAnnouncement(string $userId, string $event): null|ExtendedPromiseInterface|PromiseInterface
     {
-        try {
-            $infos = $this->api->getChannelInformation($userId);
-            $username = $infos['broadcaster_name'];
-            $url = 'https://www.twitch.tv/' . strtolower($username);
-            $userInfos = $this->api->getUserInformation($username);
-            $liveInfos = $this->api->getStreamInformation($userInfos['id']);
-            $thumbnail = str_replace([
-                "{width}",
-                "{height}"
-            ], [
-                "400",
-                "225"
-            ], $liveInfos['thumbnail_url']);
+        $channel = Channel::where('twitch_id', $userId)->first();
+        $change = false;
+        if ($channel->state !== $event) {
+            $change = true;
+            $channel->state = $event === 'stream.online' ? 'stream.offline' : 'stream.online';
+            $channel->save();
+        }
 
-            $this->bot->message()
-                ->title($liveInfos['title'])
-                ->url($url)
-                ->authorName($username . ' est en live sur Twitch !')
-                ->authorIcon('')
-                ->authorUrl($url)
-                ->field('Catégorie', $liveInfos['game_name'])
-                ->field('Viewers', $liveInfos['viewer_count'])
-                ->thumbnailUrl($userInfos['profile_image_url'])
-                ->imageUrl($thumbnail)
-                ->button('Regarder le stream', $url)
-                ->send($this->channelAnnouncement);
-        } catch (\Exception $e) {
-            throw new \Exception("Webhook error : " . $e->getMessage());
+        if ($change && $channel->state === 'stream.online') {
+            try {
+                $infos = $this->api->getChannelInformation($userId);
+                $username = $infos['broadcaster_name'];
+                $url = 'https://www.twitch.tv/' . strtolower($username);
+                $userInfos = $this->api->getUserInformation($username);
+                $liveInfos = $this->api->getStreamInformation($userInfos['id']);
+                $thumbnail = str_replace([
+                    "{width}",
+                    "{height}"
+                ], [
+                    "400",
+                    "225"
+                ], $liveInfos['thumbnail_url']);
+
+                $this->bot->message()
+                    ->title($liveInfos['title'])
+                    ->url($url)
+                    ->authorName($username . ' est en live sur Twitch !')
+                    ->authorIcon('')
+                    ->authorUrl($url)
+                    ->field('Catégorie', $liveInfos['game_name'])
+                    ->field('Viewers', $liveInfos['viewer_count'])
+                    ->thumbnailUrl($userInfos['profile_image_url'])
+                    ->imageUrl($thumbnail)
+                    ->button('Regarder le stream', $url)
+                    ->send($this->channelAnnouncement);
+            } catch (\Exception $e) {
+                throw new \Exception($e->getMessage());
+            }
         }
     }
 }

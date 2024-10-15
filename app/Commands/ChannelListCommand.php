@@ -58,22 +58,15 @@ class ChannelListCommand extends Command
     public function handle($message, $args): null|ExtendedPromiseInterface|PromiseInterface
     {
         $channels = Channel::all();
-        $result = $this->api->getSubscriptions();
         $text = "";
         $first = true;
-
-        foreach ($result['data'] as $sub) {
-            foreach ($channels as $channel) {
-                if ($channel->twitch_id === $sub['condition']['broadcaster_user_id']) {
-                    if ($first === false) {
-                        $text .= "\n\n";
-                    }
-                    $first = false;
-                    $text .= "Chaîne Twitch : " . $channel->twitch_name . "\n";
-                    $text .= "Status : " . $sub['status'] . "\n";
-                    $text .= "Ajouté le : " . (new \DateTime($sub['created_at']))->format("d/m/Y");
-                }
+        foreach ($channels as $channel) {
+            if ($first === false) {
+                $text .= "\n\n";
             }
+            $first = false;
+            $text .= "Chaîne Twitch : " . $channel->twitch_name . "\n";
+            $text .= "Ajouté le : " . (new \DateTime($channel['created_at']))->format("d/m/Y");
         }
 
         if ($text === "") {
