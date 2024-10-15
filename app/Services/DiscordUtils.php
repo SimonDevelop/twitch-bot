@@ -26,17 +26,15 @@ class DiscordUtils
         $change = false;
         if ($channel->state !== $event) {
             $change = true;
-            $channel->state = $event === 'stream.online' ? 'stream.offline' : 'stream.online';
-            $channel->save();
+            $channel->state = $event === 'stream.online' ? 'stream.online' : 'stream.offline';
         }
 
         if ($change && $channel->state === 'stream.online') {
             try {
-                $infos = $this->api->getChannelInformation($userId);
-                $username = $infos['broadcaster_name'];
+                $username = $channel->twitch_name;
                 $url = 'https://www.twitch.tv/' . strtolower($username);
                 $userInfos = $this->api->getUserInformation($username);
-                $liveInfos = $this->api->getStreamInformation($userInfos['id']);
+                $liveInfos = $this->api->getStreamInformation($userId);
                 $thumbnail = str_replace([
                     "{width}",
                     "{height}"
@@ -57,6 +55,8 @@ class DiscordUtils
                     ->imageUrl($thumbnail)
                     ->button('Regarder le stream', $url)
                     ->send($this->channelAnnouncement);
+
+                $channel->save();
             } catch (\Exception $e) {
                 throw new \Exception($e->getMessage());
             }
