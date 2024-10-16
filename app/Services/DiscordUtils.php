@@ -56,10 +56,13 @@ class DiscordUtils
                     ->button('Regarder le stream', $url)
                     ->send($this->channelAnnouncement);
 
-                $channel->save();
             } catch (\Exception $e) {
                 throw new \Exception($e->getMessage());
             }
+        }
+
+        if ($change) {
+            $channel->save();
         }
     }
 }
