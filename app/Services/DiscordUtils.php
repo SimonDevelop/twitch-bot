@@ -51,8 +51,8 @@ class DiscordUtils
                     ->authorUrl($url)
                     ->field('Catégorie', $liveInfos['game_name'])
                     ->field('Viewers', $liveInfos['viewer_count'])
-                    ->thumbnailUrl($userInfos['profile_image_url']."?t=".time())
-                    ->imageUrl($thumbnail)
+                    ->thumbnailUrl($userInfos['profile_image_url'])
+                    ->imageUrl($thumbnail."?t=".time())
                     ->button('Regarder le stream', $url)
                     ->send($this->channelAnnouncement);
 
